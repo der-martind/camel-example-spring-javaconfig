@@ -20,12 +20,19 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsComponent;
+import org.apache.camel.component.properties.PropertiesComponent;
 import org.apache.camel.spring.SpringCamelContext;
 import org.apache.camel.spring.javaconfig.Main;
 import org.apache.camel.spring.javaconfig.SingleRouteCamelConfiguration;
+import org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 
 //START SNIPPET: RouteConfig
 /**
@@ -34,7 +41,12 @@ import org.springframework.context.annotation.Configuration;
  * @version 
  */
 @Configuration
+@ComponentScan("org.apache.camel.example.spring.javaconfig")
+@PropertySource("classpath:tproc.properties")
 public class MyRouteConfig extends SingleRouteCamelConfiguration implements InitializingBean {
+    
+    @Autowired
+    private Environment env;
     
     /**
      * Allow this route to be run as an application
@@ -61,9 +73,24 @@ public class MyRouteConfig extends SingleRouteCamelConfiguration implements Init
         JmsComponent answer = new JmsComponent();
         answer.setConnectionFactory(connectionFactory);
         camelContext.addComponent("jms", answer);
+        
+        PropertiesComponent props = new PropertiesComponent("tproc.properties");
+        camelContext.addComponent("properties", props);
     }
 
-    
+
+        @Bean
+    public static BridgePropertyPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+
+        BridgePropertyPlaceholderConfigurer bppc = new BridgePropertyPlaceholderConfigurer();
+        bppc.setIgnoreUnresolvablePlaceholders(false);
+        bppc.setIgnoreResourceNotFound(false);
+       
+        bppc.setLocations(new ClassPathResource("tproc.properties"));
+        
+        return bppc;
+    }
+
     public static class SomeBean {
 
         public void someMethod(String body) {
