@@ -9,6 +9,8 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.idempotent.FileIdempotentRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Route zur Proxifizierung eines konfigurierbaren Webservice-Endpoints
@@ -16,15 +18,14 @@ import org.apache.camel.processor.idempotent.FileIdempotentRepository;
  * <br>
  * @author cbb
  */
+@Component
 public class MyRouteBuilder extends RouteBuilder {
 
-    public static final String ENDPOINT_PROXY                   = "cxf:bean:endpointEAI?dataFormat=MESSAGE";
     public static final String ROUTE_ID_LOGGING                 = "ROUTE_ID_LOGGING";
     public static final String ENDPOINT_LOGGING                 = "direct:logging";
-    public static final String ROUTE_ID_MESSENGING 		= "ROUTE_ID_MESSENGING";
-    public static final String ENDPOINT_MESSENGING 		= "direct:MESSENGING";
     public static final String ROUTE_ID_ENTERING                = "ROUTE_ID_ENTERING";
     
+    @Value("${file.base}")
     private String file_base;
     
     @Override
@@ -61,10 +62,12 @@ public class MyRouteBuilder extends RouteBuilder {
                 
                 .log(LoggingLevel.INFO, this.getClass().getName(), "ROUTE_ID_ENTERING")
                 
+                .to("log:de.cbb?showBody=true&showStreams=true")
+                
                 .idempotentConsumer(method(HashUtil.class, "hash"),
                     FileIdempotentRepository.fileIdempotentRepository(new File(file_base+"/repo")))
                     .skipDuplicate(false)
-                    .filter(property(Exchange.DUPLICATE_MESSAGE).isEqualTo(true))
+                    .filter(exchangeProperty(Exchange.DUPLICATE_MESSAGE).isEqualTo(true))
                         // filter out duplicate messages by sending them to someplace else and then stop
                         .log(LoggingLevel.WARN, this.getClass().getName(), "Duplicate")
                         .stop()
@@ -72,10 +75,16 @@ public class MyRouteBuilder extends RouteBuilder {
                 
                 .split(body(String.class).tokenize("\n"))
                 
+//                .to("log:de.cbb?showBody=true&showStreams=true")
+                
                 .process(new Processor() {
 
             @Override
             public void process(Exchange exchange) throws Exception {
+//                System.out.println("CamelSplitIndex: "+exchange.getIn().getHeader("CamelSplitIndex"));
+//                System.out.println("CamelSplitSize: "+exchange.getIn().getHeader("CamelSplitSize"));
+//                System.out.println("CamelSplitComplete: "+exchange.getIn().getHeader("CamelSplitComplete"));
+//                System.out.println("new name: "+exchange.getIn().getHeader(Exchange.FILE_NAME) + "_"+exchange.getIn().getHeader(Exchange.SPLIT_INDEX)+".txt");
                 exchange.getIn().setHeader(Exchange.FILE_NAME, exchange.getIn().getHeader(Exchange.FILE_NAME) + "_"+exchange.getIn().getHeader(Exchange.SPLIT_INDEX)+".txt");
             }
         })
@@ -109,7 +118,7 @@ public class MyRouteBuilder extends RouteBuilder {
                 .log(LoggingLevel.INFO, this.getClass().getName(), "ROUTE_ID_LOGGING")
                 
                 // Einfaches Logging-Protokoll erstellen
-                .to("log:de.muenchen.eai.request?showBody=true&showStreams=true")
+                .to("log:de.cbb?showBody=true&showStreams=true")
                 // File 
 //      	.to("file://C:tmp?fileName=${date:now:yyyyMMdd}-${in.header.type}-${date:now:hh.mm.ss.SSS}.txt&autoCreate=true")
                 
