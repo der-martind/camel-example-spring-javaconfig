@@ -26,7 +26,7 @@
 
   <artifactId>camel-example-spring-javaconfig</artifactId>
   <packaging>jar</packaging>
-  <name>Camel :: Example :: Spring :: JavaConfig</name>
+  <name>Camel Transfer Processing</name>
   <description>Based on camel-example-spring-javaconfig</description>
 
   <properties>    
