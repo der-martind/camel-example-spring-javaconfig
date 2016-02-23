@@ -24,6 +24,7 @@
     <version>2.15.2</version>
   </parent>
 
+  <groupId>de.cbb.financial</groupId>  
   <artifactId>camel-example-spring-javaconfig</artifactId>
   <packaging>jar</packaging>
   <name>Camel Transfer Processing</name>
