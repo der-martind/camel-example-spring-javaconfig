@@ -27,7 +27,7 @@
   <artifactId>camel-example-spring-javaconfig</artifactId>
   <packaging>jar</packaging>
   <name>Camel :: Example :: Spring :: JavaConfig</name>
-  <description>An example showing how to work with Camel and Spring Java Config</description>
+  <description>Based on camel-example-spring-javaconfig</description>
 
   <properties>    
     <junit-version>4.11</junit-version>
